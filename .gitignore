@@ -1,0 +1,43 @@
+# Dependencias
+node_modules/
+package-lock.json
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Directorios de tiempo de ejecución
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Directorios de cobertura de pruebas
+coverage/
+
+# Archivos de configuración
+.env
+.env.local
+.env.*.local
+
+# Directorios y archivos de la base de datos
+mysql-db-data/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Directorios de IDE y editores
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos de compilación
+dist/
+build/
+
+# Otros
+*.tmp
+*.temp

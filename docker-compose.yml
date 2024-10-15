@@ -1,0 +1,25 @@
+networks:
+  mysql_normal_mi-red-mysql:
+    external: true
+
+services:
+  api_mysql:
+    build:
+      context: .
+    env_file:
+      - .env  # Cargar variables desde el archivo .env en la ruta base
+    environment:
+      - PORT=${PORT}
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - TOKEN_SECRET=${TOKEN_SECRET}
+      - TOKEN_NAME=${TOKEN_NAME}
+      - TOKEN_STATUS=${TOKEN_STATUS}
+      
+    ports:
+      - "3366:3366"
+    networks:
+      - mysql_normal_mi-red-mysql
+    restart: always
