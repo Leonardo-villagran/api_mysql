@@ -34,7 +34,17 @@ const userPayload = {
 
 const token = jwt.sign(userPayload, process.env.TOKEN_SECRET);
 
-// Middleware para validar el token
+// Middleware para validar la API Key
+const validateApiKey = (req, res, next) => {
+  const apiKey = req.headers['api_key'];
+  if (apiKey === process.env.API_KEY) {
+    next(); // Si la API Key es válida, continua
+  } else {
+    res.status(403).send('API Key no válida'); // Si no es válida, deniega el acceso
+  }
+};
+
+// Middleware para validar el Bearer Token
 const validateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Extraer el token
@@ -48,8 +58,8 @@ const validateToken = (req, res, next) => {
   });
 };
 
-// Ruta para obtener los proyectos
-app.get('/projects', validateToken, async (req, res) => {
+// Ruta para obtener los proyectos (protección con API Key y Token)
+app.get('/projects', validateApiKey, validateToken, async (req, res) => {
   try {
     const [results] = await db.query('SELECT * FROM projects');
     res.json(results);
