@@ -7,23 +7,37 @@ dotenv.config(); // Cargar variables de entorno
 const app = express();
 const port = process.env.PORT || 3366;
 
-// Crear la conexión a la base de datos usando promesas
-let db;
+// Crear un pool de conexiones
+let pool;
 
 const connectDB = async () => {
   try {
-    db = await mysql.createConnection({
+    pool = mysql.createPool({
       host: process.env.MYSQL_HOST,
       user: process.env.MYSQL_USER,
       password: process.env.MYSQL_ROOT_PASSWORD,
       database: process.env.MYSQL_DATABASE,
+      waitForConnections: true,
+      connectionLimit: 10, // Límite de conexiones simultáneas
+      queueLimit: 0 // Sin límite en la cola de conexiones
     });
-    console.log('Conexión a la base de datos exitosa.');
+    console.log('Conexión al pool de base de datos exitosa.');
   } catch (err) {
-    console.error('Error al conectar a la base de datos:', err);
+    console.error('Error al conectar al pool de base de datos:', err);
     process.exit(1); // Termina la ejecución si no se puede conectar
   }
 };
+
+
+console.log('Mysql_host:',process.env.MYSQL_HOST);
+console.log('Mysql_user:',process.env.MYSQL_USER);
+console.log('Mysql_root_password:',process.env.MYSQL_ROOT_PASSWORD);
+console.log('Mysql_database:',process.env.MYSQL_DATABASE);
+console.log('Api_key:',process.env.API_KEY);
+console.log('Port:',process.env.PORT);
+console.log('Database:',process.env.MYSQL_DATABASE);
+
+
 
 // Middleware para validar la API Key
 const validateApiKey = (req, res, next) => {
@@ -38,19 +52,20 @@ const validateApiKey = (req, res, next) => {
 // Ruta para obtener los proyectos (protección con API Key en la URL)
 app.get('/projects', validateApiKey, async (req, res) => {
   try {
-    const [results] = await db.query('SELECT * FROM projects');
+    const [results] = await pool.query('SELECT * FROM projects');
     res.json(results);
   } catch (err) {
     console.error('Error al obtener proyectos:', err);
-    res.status(500).send('Error al obtener proyectos');
+    res.status(500).send('Error al obtener proyectos error:'+err);
   }
 });
 
-// Iniciar el servidor y conectar a la base de datos
+// Iniciar el servidor y conectar al pool de conexiones
 app.listen(port, async () => {
-  await connectDB(); // Conectar a la base de datos antes de iniciar el servidor
+  await connectDB(); // Conectar al pool de la base de datos antes de iniciar el servidor
   console.log(`Servidor ejecutándose en el puerto ${port}`);
 });
+
 
 
 /*
