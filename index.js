@@ -30,10 +30,10 @@ const connectDB = async () => {
 
 
 console.log('Mysql_host:',process.env.MYSQL_HOST);
-console.log('Mysql_user:',process.env.MYSQL_USER);
-console.log('Mysql_root_password:',process.env.MYSQL_ROOT_PASSWORD);
+// console.log('Mysql_user:',process.env.MYSQL_USER);
+// console.log('Mysql_root_password:',process.env.MYSQL_ROOT_PASSWORD);
 console.log('Mysql_database:',process.env.MYSQL_DATABASE);
-console.log('Api_key:',process.env.API_KEY);
+// console.log('Api_key:',process.env.API_KEY);
 console.log('Port:',process.env.PORT);
 console.log('Database:',process.env.MYSQL_DATABASE);
 
@@ -59,6 +59,29 @@ app.get('/projects', validateApiKey, async (req, res) => {
     res.status(500).send('Error al obtener proyectos error:'+err);
   }
 });
+
+// Nueva ruta para buscar universidades usando la sigla como parámetro de consulta
+app.get('/universidad', validateApiKey, async (req, res) => {
+  const { sigla } = req.query; // Obtener la sigla desde la consulta
+  if (!sigla) {
+    return res.status(400).send('Se requiere la sigla de la universidad'); // Validar que se haya proporcionado la sigla
+  }
+
+  try {
+    const [results] = await pool.query(
+      'SELECT * FROM universidad WHERE LOWER(siglas) = LOWER(?)',
+      [sigla] // Usar la sigla como variable en la consulta
+    );
+    if (results.length === 0) {
+      return res.status(404).send('Universidad no encontrada'); // Manejar caso en que no se encuentre la universidad
+    }
+    res.json(results);
+  } catch (err) {
+    console.error('Error al buscar universidades:', err);
+    res.status(500).send('Error al buscar universidades: ' + err);
+  }
+});
+
 
 // Iniciar el servidor y conectar al pool de conexiones
 app.listen(port, async () => {
