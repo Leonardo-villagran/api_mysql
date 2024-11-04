@@ -75,6 +75,7 @@ app.get('/universidad', validateApiKey, async (req, res) => {
     if (results.length === 0) {
       return res.status(404).send('Universidad no encontrada'); // Manejar caso en que no se encuentre la universidad
     }
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.json(results);
   } catch (err) {
     console.error('Error al buscar universidades:', err);
