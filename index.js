@@ -7,6 +7,8 @@ dotenv.config(); // Cargar variables de entorno
 const app = express();
 const port = process.env.PORT || 3366;
 
+const iconv = require('iconv-lite'); // Necesitarás instalar el paquete iconv-lite
+
 // Crear un pool de conexiones
 let pool;
 
@@ -75,8 +77,15 @@ app.get('/universidad', validateApiKey, async (req, res) => {
     if (results.length === 0) {
       return res.status(404).send('Universidad no encontrada'); // Manejar caso en que no se encuentre la universidad
     }
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.json(results);
+    // res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    // res.json(results);
+        // Convertir los datos a ISO-8859-1 antes de enviarlos
+    const jsonResponse = JSON.stringify(results);
+    const encodedResponse = iconv.encode(jsonResponse, 'ISO-8859-1');
+
+    // Establecer el encabezado de tipo de contenido a ISO-8859-1
+    res.setHeader('Content-Type', 'application/json; charset=ISO-8859-1');
+    res.send(encodedResponse);
   } catch (err) {
     console.error('Error al buscar universidades:', err);
     res.status(500).send('Error al buscar universidades: ' + err);
