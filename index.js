@@ -92,6 +92,36 @@ app.get('/universidad', validateApiKey, async (req, res) => {
   }
 });
 
+// Ruta para obtener procesos según el código de proyecto
+app.get('/proyecto', validateApiKey, async (req, res) => {
+  const { codigo_proyecto } = req.query; // Obtener el código de proyecto desde la consulta
+  if (!codigo_proyecto) {
+    return res.status(400).send('Se requiere el código del proyecto'); // Validar que se haya proporcionado el código
+  }
+
+  try {
+    const [results] = await pool.query(
+      'SELECT * FROM proyecto_condiciones_de_vida WHERE LOWER(codigo_proyecto) = LOWER(?)',
+      [codigo_proyecto] // Usar el código de proyecto como parámetro en la consulta
+    );
+
+    if (results.length === 0) {
+      return res.status(404).send('Proyecto no encontrado'); // Manejar el caso en que no se encuentre el proyecto
+    }
+
+    // Convertir los datos a ISO-8859-1 antes de enviarlos
+    const jsonResponse = JSON.stringify(results);
+    const encodedResponse = iconv.encode(jsonResponse, 'ISO-8859-1');
+
+    // Establecer el encabezado de tipo de contenido a ISO-8859-1
+    res.setHeader('Content-Type', 'application/json; charset=ISO-8859-1');
+    res.send(encodedResponse);
+  } catch (err) {
+    console.error('Error al buscar el proyecto:', err);
+    res.status(500).send('Error al buscar el proyecto: ' + err);
+  }
+});
+
 
 // Iniciar el servidor y conectar al pool de conexiones
 app.listen(port, async () => {
