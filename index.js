@@ -30,7 +30,6 @@ const connectDB = async () => {
   }
 };
 
-
 console.log('Mysql_host:',process.env.MYSQL_HOST);
 // console.log('Mysql_user:',process.env.MYSQL_USER);
 // console.log('Mysql_root_password:',process.env.MYSQL_ROOT_PASSWORD);
@@ -38,8 +37,6 @@ console.log('Mysql_database:',process.env.MYSQL_DATABASE);
 // console.log('Api_key:',process.env.API_KEY);
 console.log('Port:',process.env.PORT);
 console.log('Database:',process.env.MYSQL_DATABASE);
-
-
 
 // Middleware para validar la API Key
 const validateApiKey = (req, res, next) => {
@@ -128,8 +125,6 @@ app.listen(port, async () => {
   await connectDB(); // Conectar al pool de la base de datos antes de iniciar el servidor
   console.log(`Servidor ejecutándose en el puerto ${port}`);
 });
-
-
 
 /*
 
