@@ -1,19 +1,18 @@
 const express = require('express');
-const mysql = require('mysql2/promise'); // Usar la versión basada en promesas
+const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
+const iconv = require('iconv-lite');
 
-dotenv.config(); // Cargar variables de entorno
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3366;
 
-const iconv = require('iconv-lite'); // Necesitarás instalar el paquete iconv-lite
-
-// Crear un pool de conexiones
 let pool;
 
 const connectDB = async () => {
   try {
+    console.log('Intentando conectar con la base de datos...');
     pool = mysql.createPool({
       host: process.env.MYSQL_HOST,
       user: process.env.MYSQL_USER,
@@ -21,8 +20,8 @@ const connectDB = async () => {
       database: process.env.MYSQL_DATABASE,
       port: process.env.MYSQL_PORT,
       waitForConnections: true,
-      connectionLimit: 10, // Límite de conexiones simultáneas
-      queueLimit: 0 // Sin límite en la cola de conexiones
+      connectionLimit: 10,
+      queueLimit: 0,
     });
     console.log('Conexión al pool de base de datos exitosa.');
   } catch (err) {
@@ -31,100 +30,93 @@ const connectDB = async () => {
   }
 };
 
-console.log('Mysql_host:',process.env.MYSQL_HOST);
-// console.log('Mysql_user:',process.env.MYSQL_USER);
-// console.log('Mysql_root_password:',process.env.MYSQL_ROOT_PASSWORD);
-console.log('Mysql_database:',process.env.MYSQL_DATABASE);
-// console.log('Api_key:',process.env.API_KEY);
-console.log('Port:',process.env.PORT);
-console.log('Database:',process.env.MYSQL_DATABASE);
-console.log('Mysql_port:',process.env.MYSQL_PORT);
+console.log('Mysql_host:', process.env.MYSQL_HOST);
+console.log('Mysql_database:', process.env.MYSQL_DATABASE);
+console.log('Port:', process.env.PORT);
+console.log('Mysql_port:', process.env.MYSQL_PORT);
 
 // Middleware para validar la API Key
 const validateApiKey = (req, res, next) => {
-  const apiKey = req.query.api_key; // Obtener la api_key desde la consulta
+  const apiKey = req.query.api_key;
 
   if (apiKey !== process.env.API_KEY) {
-    return res.status(403).send('API Key no válida'); // Denegar acceso si no es válida
+    return res.status(403).send('API Key no válida');
   }
-  next(); // Si la API Key es válida, continua
+  next();
 };
 
-// Ruta para obtener los proyectos (protección con API Key en la URL)
+// Ruta para obtener los proyectos
 app.get('/projects', validateApiKey, async (req, res) => {
+  console.log('Solicitud recibida para obtener proyectos...');
   try {
     const [results] = await pool.query('SELECT * FROM projects');
+    console.log('Datos de proyectos obtenidos:', results.length);
     res.json(results);
   } catch (err) {
     console.error('Error al obtener proyectos:', err);
-    res.status(500).send('Error al obtener proyectos error:'+err);
+    res.status(500).send('Error al obtener proyectos: ' + err.message);
   }
 });
 
-// Nueva ruta para buscar universidades usando la sigla como parámetro de consulta
+// Ruta para buscar universidades por sigla
 app.get('/universidad', validateApiKey, async (req, res) => {
-  const { sigla } = req.query; // Obtener la sigla desde la consulta
+  const { sigla } = req.query;
   if (!sigla) {
-    return res.status(400).send('Se requiere la sigla de la universidad'); // Validar que se haya proporcionado la sigla
+    return res.status(400).send('Se requiere la sigla de la universidad');
   }
 
+  console.log('Solicitud recibida para buscar universidad con sigla:', sigla);
   try {
     const [results] = await pool.query(
       'SELECT * FROM universidad WHERE LOWER(siglas) = LOWER(?)',
-      [sigla] // Usar la sigla como variable en la consulta
+      [sigla]
     );
     if (results.length === 0) {
-      return res.status(404).send('Universidad no encontrada'); // Manejar caso en que no se encuentre la universidad
+      console.log(`Universidad con sigla ${sigla} no encontrada.`);
+      return res.status(404).send('Universidad no encontrada');
     }
-    // res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    // res.json(results);
-        // Convertir los datos a ISO-8859-1 antes de enviarlos
+    console.log('Universidad encontrada:', results[0]);
     const jsonResponse = JSON.stringify(results);
     const encodedResponse = iconv.encode(jsonResponse, 'ISO-8859-1');
-
-    // Establecer el encabezado de tipo de contenido a ISO-8859-1
     res.setHeader('Content-Type', 'application/json; charset=ISO-8859-1');
     res.send(encodedResponse);
   } catch (err) {
     console.error('Error al buscar universidades:', err);
-    res.status(500).send('Error al buscar universidades: ' + err);
+    res.status(500).send('Error al buscar universidades: ' + err.message);
   }
 });
 
 // Ruta para obtener procesos según el código de proyecto
 app.get('/proyecto', validateApiKey, async (req, res) => {
-  const { codigo_proyecto } = req.query; // Obtener el código de proyecto desde la consulta
+  const { codigo_proyecto } = req.query;
   if (!codigo_proyecto) {
-    return res.status(400).send('Se requiere el código del proyecto'); // Validar que se haya proporcionado el código
+    return res.status(400).send('Se requiere el código del proyecto');
   }
 
+  console.log('Solicitud recibida para obtener proyecto con código:', codigo_proyecto);
   try {
     const [results] = await pool.query(
       'SELECT * FROM proyecto_condiciones_de_vida WHERE LOWER(codigo_proyecto) = LOWER(?)',
-      [codigo_proyecto] // Usar el código de proyecto como parámetro en la consulta
+      [codigo_proyecto]
     );
-
     if (results.length === 0) {
-      return res.status(404).send('Proyecto no encontrado'); // Manejar el caso en que no se encuentre el proyecto
+      console.log(`Proyecto con código ${codigo_proyecto} no encontrado.`);
+      return res.status(404).send('Proyecto no encontrado');
     }
-
-    // Convertir los datos a ISO-8859-1 antes de enviarlos
+    console.log('Proyecto encontrado:', results[0]);
     const jsonResponse = JSON.stringify(results);
     const encodedResponse = iconv.encode(jsonResponse, 'ISO-8859-1');
-
-    // Establecer el encabezado de tipo de contenido a ISO-8859-1
     res.setHeader('Content-Type', 'application/json; charset=ISO-8859-1');
     res.send(encodedResponse);
   } catch (err) {
     console.error('Error al buscar el proyecto:', err);
-    res.status(500).send('Error al buscar el proyecto: ' + err);
+    res.status(500).send('Error al buscar el proyecto: ' + err.message);
   }
 });
 
-
 // Iniciar el servidor y conectar al pool de conexiones
 app.listen(port, async () => {
-  await connectDB(); // Conectar al pool de la base de datos antes de iniciar el servidor
+  await connectDB();
   console.log(`Servidor ejecutándose en el puerto ${port}`);
 });
 
