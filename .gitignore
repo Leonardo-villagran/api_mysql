@@ -41,3 +41,5 @@ build/
 # Otros
 *.tmp
 *.temp
+
+back.sql

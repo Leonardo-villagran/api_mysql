@@ -19,6 +19,7 @@ const connectDB = async () => {
       user: process.env.MYSQL_USER,
       password: process.env.MYSQL_ROOT_PASSWORD,
       database: process.env.MYSQL_DATABASE,
+      port: process.env.MYSQL_PORT,
       waitForConnections: true,
       connectionLimit: 10, // Límite de conexiones simultáneas
       queueLimit: 0 // Sin límite en la cola de conexiones
@@ -37,6 +38,7 @@ console.log('Mysql_database:',process.env.MYSQL_DATABASE);
 // console.log('Api_key:',process.env.API_KEY);
 console.log('Port:',process.env.PORT);
 console.log('Database:',process.env.MYSQL_DATABASE);
+console.log('Mysql_port:',process.env.MYSQL_PORT);
 
 // Middleware para validar la API Key
 const validateApiKey = (req, res, next) => {
